@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Калькулятор</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #141e30, #243b55);
+            font-family: Arial, sans-serif;
+        }
+
+        .calculator {
+            width: 350px;
+            padding: 20px;
+            border-radius: 25px;
+            background: rgba(20, 20, 20, 0.95);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        }
+
+        .display {
+            width: 100%;
+            height: 100px;
+            margin-bottom: 20px;
+            padding: 15px;
+            border-radius: 15px;
+            background: #101010;
+            color: white;
+            display: flex;
+            justify-content: flex-end;
+            align-items: flex-end;
+            font-size: 42px;
+            overflow: hidden;
+            word-break: break-all;
+        }
+
+        .buttons {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+        }
+
+        button {
+            height: 65px;
+            border: none;
+            border-radius: 15px;
+            font-size: 24px;
+            color: white;
+            background: #292929;
+            cursor: pointer;
+            transition: 0.15s;
+        }
+
+        button:hover {
+            background: #3b3b3b;
+        }
+
+        button:active {
+            transform: scale(0.94);
+        }
+
+        .operator {
+            background: #ff9500;
+        }
+
+        .operator:hover {
+            background: #ffad32;
+        }
+
+        .function {
+            background: #555;
+        }
+
+        .equals {
+            background: #2196f3;
+        }
+
+        .equals:hover {
+            background: #42a5f5;
+        }
+
+        .zero {
+            grid-column: span 2;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="calculator">
+
+    <div class="display" id="display">0</div>
+
+    <div class="buttons">
+        <button class="function" onclick="clearDisplay()">C</button>
+        <button class="function" onclick="backspace()">⌫</button>
+        <button class="function" onclick="percent()">%</button>
+        <button class="operator" onclick="chooseOperator('÷')">÷</button>
+
+        <button onclick="addNumber('7')">7</button>
+        <button onclick="addNumber('8')">8</button>
+        <button onclick="addNumber('9')">9</button>
+        <button class="operator" onclick="chooseOperator('×')">×</button>
+
+        <button onclick="addNumber('4')">4</button>
+        <button onclick="addNumber('5')">5</button>
+        <button onclick="addNumber('6')">6</button>
+        <button class="operator" onclick="chooseOperator('−')">−</button>
+
+        <button onclick="addNumber('1')">1</button>
+        <button onclick="addNumber('2')">2</button>
+        <button onclick="addNumber('3')">3</button>
+        <button class="operator" onclick="chooseOperator('+')">+</button>
+
+        <button class="zero" onclick="addNumber('0')">0</button>
+        <button onclick="addDecimal()">.</button>
+        <button class="equals" onclick="calculate()">=</button>
+    </div>
+
+</div>
+
+<script>
+    const display = document.getElementById("display");
+
+    let currentNumber = "0";
+    let previousNumber = null;
+    let operator = null;
+    let shouldResetDisplay = false;
+
+    function updateDisplay() {
+        display.textContent = currentNumber;
+    }
+
+    function addNumber(number) {
+        if (shouldResetDisplay) {
+            currentNumber = number;
+            shouldResetDisplay = false;
+        } else {
+            if (currentNumber === "0") {
+                currentNumber = number;
+            } else {
+                currentNumber += number;
+            }
+        }
+
+        updateDisplay();
+    }
+
+    function addDecimal() {
+        if (shouldResetDisplay) {
+            currentNumber = "0.";
+            shouldResetDisplay = false;
+        } else if (!currentNumber.includes(".")) {
+            currentNumber += ".";
+        }
+
+        updateDisplay();
+    }
+
+    function clearDisplay() {
+        currentNumber = "0";
+        previousNumber = null;
+        operator = null;
+        shouldResetDisplay = false;
+        updateDisplay();
+    }
+
+    function backspace() {
+        if (currentNumber.length > 1) {
+            currentNumber = currentNumber.slice(0, -1);
+        } else {
+            currentNumber = "0";
+        }
+
+        updateDisplay();
+    }
+
+    function percent() {
+        currentNumber = String(parseFloat(currentNumber) / 100);
+        updateDisplay();
+    }
+
+    function chooseOperator(selectedOperator) {
+        if (operator !== null && !shouldResetDisplay) {
+            calculate();
+        }
+
+        previousNumber = parseFloat(currentNumber);
+        operator = selectedOperator;
+        shouldResetDisplay = true;
+    }
+
+    function calculate() {
+        if (operator === null || previousNumber === null) {
+            return;
+        }
+
+        const current = parseFloat(currentNumber);
+        let result;
+
+        switch (operator) {
+            case "+":
+                result = previousNumber + current;
+                break;
+
+            case "−":
+                result = previousNumber - current;
+                break;
+
+            case "×":
+                result = previousNumber * current;
+                break;
+
+            case "÷":
+                if (current === 0) {
+                    currentNumber = "Помилка";
+                    previousNumber = null;
+                    operator = null;
+                    shouldResetDisplay = true;
+                    updateDisplay();
+                    return;
+                }
+
+                result = previousNumber / current;
+                break;
+        }
+
+        // Прибираємо зайві нулі після десяткової крапки
+        currentNumber = String(
+            Math.round(result * 100000000) / 100000000
+        );
+
+        previousNumber = null;
+        operator = null;
+        shouldResetDisplay = true;
+
+        updateDisplay();
+    }
+
+    // Керування клавіатурою
+    document.addEventListener("keydown", function(event) {
+
+        if (event.key >= "0" && event.key <= "9") {
+            addNumber(event.key);
+        }
+
+        else if (event.key === ".") {
+            addDecimal();
+        }
+
+        else if (event.key === "+") {
+            chooseOperator("+");
+        }
+
+        else if (event.key === "-") {
+            chooseOperator("−");
+        }
+
+        else if (event.key === "*") {
+            chooseOperator("×");
+        }
+
+        else if (event.key === "/") {
+            event.preventDefault();
+            chooseOperator("÷");
+        }
+
+        else if (event.key === "%") {
+            percent();
+        }
+
+        else if (event.key === "Enter" || event.key === "=") {
+            calculate();
+        }
+
+        else if (event.key === "Backspace") {
+            backspace();
+        }
+
+        else if (event.key === "Escape") {
+            clearDisplay();
+        }
+    });
+</script>
+
+</body>
+</html>
